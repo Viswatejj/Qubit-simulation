@@ -70,6 +70,70 @@ class qubit:
         self.state.apply(gate)
 
 
+#getting the coordinates for the blochvector
+def blochVector(stateParameter):
+    # alpha = stateParameter[0][0]
+    # beta = stateParameter[1][0]
+    # theta = 2*(np.arccos(np.abs(alpha)))
+    # phi = (np.log(beta/np.sin(theta/2)))/1j
+    # x=np.sin(theta)*np.cos(phi)
+    # y=np.sin(theta)*np.sin(phi)
+    # z=np.cos(theta)
+    # return x,y,z
+
+    alpha = stateParameter[0][0]
+    beta = stateParameter[1][0]
+    theta = 2 * np.arccos(np.clip(np.abs(alpha), 0, 1))
+    phi = np.angle(beta) - np.angle(alpha)
+    x = np.sin(theta) * np.cos(phi)
+    y = np.sin(theta) * np.sin(phi)
+    z = np.cos(theta)
+    return x, y, z
+
+#drawing the bloch sphere
+def draw_bloch(ax, stateParameter, no):
+    ax.clear()
+
+    # Sphere surface and wireframe
+    u = np.linspace(0, 2 * np.pi, 40)
+    v = np.linspace(0, np.pi, 20)
+    xs = np.outer(np.cos(u), np.sin(v))
+    ys = np.outer(np.sin(u), np.sin(v))
+    zs = np.outer(np.ones_like(u), np.cos(v))
+    ax.plot_surface(xs, ys, zs, color="lightblue", alpha=0.15, linewidth=0)
+    ax.plot_wireframe(xs, ys, zs, color="gray", alpha=0.2, linewidth=0.3)
+
+    # Equator
+    t = np.linspace(0, 2 * np.pi, 100)
+    ax.plot(np.cos(t), np.sin(t), 0 * t, color="gray", lw=0.8)
+
+    # Coordinate axes
+    ax.plot([-1.2, 1.2], [0, 0], [0, 0], "k-", lw=0.8)
+    ax.plot([0, 0], [-1.2, 1.2], [0, 0], "k-", lw=0.8)
+    ax.plot([0, 0], [0, 0], [-1.2, 1.2], "k-", lw=0.8)
+
+    # Labels
+    ax.text(0, 0, 1.3, "|0>", ha="center", fontsize=12)
+    ax.text(0, 0, -1.4, "|1>", ha="center", fontsize=12)
+    ax.text(1.35, 0, 0, "+x", ha="center")
+    ax.text(0, 1.35, 0, "+y", ha="center")
+
+    # The qubit's state as an arrow
+    x, y, z = blochVector(stateParameter)
+    ax.quiver(0, 0, 0, x, y, z, color="red", linewidth=3, arrow_length_ratio=0.15)
+    ax.scatter([x], [y], [z], color="red", s=40)
+
+    ax.set_xlim(-1, 1)
+    ax.set_ylim(-1, 1)
+    ax.set_zlim(-1, 1)
+    ax.set_box_aspect((1, 1, 1))
+    ax.set_axis_off()
+    ax.set_title(f"Bloch vector for qubit #{no}: ({x:.2f}, {y:.2f}, {z:.2f})")
+    plt.draw()
+    plt.pause(0.1)
+
+
+
 singleGates = {
     "1": ("Identity",  Gate_identity),
     "2": ("Pauli X",   Gate_PauliX),
@@ -80,10 +144,6 @@ singleGates = {
     "7": ("T",  Gate_T),
 }
 
-    #gate that applies a given function
-def applyGate(gate, stateParameter):
-    return gate@stateParameter
-
 def kroneckerProduct():
     resultant=qubit.register[0].state.vector()
     for i in range(1, len(qubit.register)):
@@ -92,11 +152,18 @@ def kroneckerProduct():
 
 #main program
 
+#initializing and displaying bloch sphere
+plt.ion()
+fig = plt.figure(figsize=(6, 6))
+ax = fig.add_subplot(111, projection="3d")
+
+
 while True:
     menu = input('''
     1. Create a qubit
     2. Apply gate to singular qubit
-    3. Combine the qubits
+    3. Display a qubit in a bloch sphere
+    4. Display Total qubit system
     q. Quit
     Choose: ''')
     print("")
@@ -130,6 +197,7 @@ while True:
             print(f"Created qubit #{len(qubit.register)}")
             print(f"  State:         {np.round(q.state.vector().flatten(), 3)}")
             print(f"  Probabilities: {np.round(q.probabilities().flatten(), 3)}")
+            draw_bloch(ax, q.state.vector(), len(qubit.register))
         case "2":
             if(len(qubit.register)==0):
                 print("No qubit created")
@@ -149,14 +217,23 @@ while True:
             if choice not in singleGates:
                 print("Invalid entry")
                 continue
-            
+
             name, gate = singleGates[choice]
             target.apply(gate)
+            draw_bloch(ax, target.state.vector(), qubitChoice)
             print("")
             print(f"After {name}:")
             print(f"  State:         {np.round(target.state.vector().flatten(), 3)}")
             print(f"  Probabilities: {np.round(target.probabilities().flatten(), 3)}")
         case "3":
+            if (len(qubit.register)==0):
+                print("Not enough qubits")
+                continue
+            for i in range(0, len(qubit.register)):
+                print(f"qubit no.{i+1}")
+            qubitChoice = int(input("Enter which qubit: "))
+            draw_bloch(ax, qubit.register[qubitChoice-1].state.vector(), qubitChoice)
+        case "4":
             if(len(qubit.register)<2):
                 print("Not enough qubits")
                 continue
