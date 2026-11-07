@@ -16,6 +16,20 @@ Gate_pauliZ = np.array([[1, 0], [0, -1]], dtype=complex)
 Gate_S = np.array([[1, 0], [0, 1j]], dtype=complex)
 Gate_T = np.array([[1, 0], [0, np.exp(1j * np.pi / 4)]], dtype=complex)
 
+#setting up the multi quantumgate matrices
+
+Gate_CNOT = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]], dtype=complex)
+Gate_CNOT01 = np.array([[1, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0], [0, 1, 0, 0]], dtype=complex)
+Gate_CIdentity = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]], dtype=complex)
+Gate_CpauliX = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]], dtype=complex)
+Gate_CpauliY = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, -1j], [0, 0, 1j, 0]], dtype=complex)
+Gate_CpauliZ = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, -1]], dtype=complex)
+Gate_CHadamard = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, np.sqrt(1/2), np.sqrt(1/2)], [0, 0, np.sqrt(1/2), -np.sqrt(1/2)]], dtype=complex)
+Gate_CS = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1j]], dtype=complex)
+Gate_CT = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, -np.exp(1j * np.pi / 4)]], dtype=complex)
+Gate_SWAP = np.array([[1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]], dtype=complex)
+
+
 #setting up the multiple Quantumgate matrices
 
 class qubitState:
@@ -134,6 +148,19 @@ def draw_bloch(ax, stateParameter, no):
 
 
 
+multiGates = {
+    "1": ("CNOT",  Gate_CNOT),
+    "2": ("CNOT01",   Gate_CNOT01),
+    "3": ("Controlled Identity",  Gate_CIdentity),
+    "4": ("Controlled PauliX",  Gate_CpauliX),
+    "5": ("Controlled PauliY",  Gate_CpauliY),
+    "6": ("Controlled PauliZ",  Gate_CpauliZ),
+    "7": ("Controlled Hadamard",  Gate_CHadamard),
+    "8": ("Controlled S",  Gate_CS),
+    "9": ("Controlled T",  Gate_CT),
+    "10": ("SWAP",  Gate_SWAP),
+}
+
 singleGates = {
     "1": ("Identity",  Gate_identity),
     "2": ("Pauli X",   Gate_PauliX),
@@ -163,7 +190,8 @@ while True:
     1. Create a qubit
     2. Apply gate to singular qubit
     3. Display a qubit in a bloch sphere
-    4. Display Total qubit system
+    4. Show the Total qubit system
+    5. Perform operations on the total qubit system
     q. Quit
     Choose: ''')
     print("")
@@ -243,6 +271,48 @@ while True:
             for i, amp in enumerate(result):
                 label = format(i, f"0{n}b")      # 0 -> '00', 1 -> '01', ...
                 print(f"  |{label}>  amplitude {np.round(amp, 3)}   probability {np.round(abs(amp)**2, 3)}")
+        case "5":
+            choiceOfQubit = input('''
+            1. 2 Qubits
+            2. 3 Qubits
+            Choose the number of qubits in the qubit system:''')
+            match choiceOfQubit:
+                case "1":
+                    if len(qubit.register)!=2:
+                        print("Invalid number of qubits in the register")
+                        continue
+                    result = kroneckerProduct()
+                    n = len(qubit.register)
+                    print(f"Combined state of {n} qubits ({2**n} amplitudes):")
+                    for i, amp in enumerate(result):
+                        label = format(i, f"0{n}b")      # 0 -> '00', 1 -> '01', ...
+                        print(f"  |{label}>  amplitude {np.round(amp, 3)}   probability {np.round(abs(amp)**2, 3)}")
+                    print("\nGates:")
+                    for key, (name, _) in multiGates.items():
+                        print(f"  {key}. {name}")
+                    choice = input("Choose a gate (or q to quit): ")
+                
+                    if choice == "q":
+                        break
+                    if choice not in multiGates:
+                        print("Invalid entry")
+                        continue
+
+                    name, gate = multiGates[choice]
+                    result=gate@result
+                    print("")
+                    print(f"After {name}:")
+                    for i, amp in enumerate(result):
+                        label = format(i, f"0{n}b")      # 0 -> '00', 1 -> '01', ...
+                        print(f"  |{label}>  amplitude {np.round(amp, 3)}   probability {np.round(abs(amp)**2, 3)}")
+                case "2":
+                    if len(qubit.register)!=3:
+                        print("Invalid number of qubits in the register")
+                        continue
+                    print("in the works...")
+                case _:
+                    print("Invalid")
+                    continue
         case _:
             print("Invalid input")
             continue
