@@ -125,3 +125,7 @@ Expected output for the final state:
 - Measurement with random collapse
 - Input validation and a "back" option in every sub-menu
 - Save and load circuits
+
+## License
+ 
+This project is licensed under the [MIT License](LICENSE).
