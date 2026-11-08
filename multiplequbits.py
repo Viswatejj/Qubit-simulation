@@ -1,13 +1,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+#|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\
+#Initiallizing basic quantum states and matrices
+#|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\
+
+
 #Initializing teh the QUBIT in base states
 ket0 = np.array([[1],[0]], dtype=complex)  #|0>
 ket1 = np.array([[0],[1]], dtype=complex)  #|1>
 state = ket0  #Original state of the qubit
 
 #setting up the Single QuantumGate matrices
-
 Gate_identity = np.array([[1,0],[0,1]], dtype=complex)
 Gate_PauliX = np.array([[0,1], [1,0]], dtype=complex)
 Gate_Hadamard = np.sqrt(1/2)*np.array([[1,1],[1,-1]], dtype=complex)
@@ -16,8 +20,8 @@ Gate_pauliZ = np.array([[1, 0], [0, -1]], dtype=complex)
 Gate_S = np.array([[1, 0], [0, 1j]], dtype=complex)
 Gate_T = np.array([[1, 0], [0, np.exp(1j * np.pi / 4)]], dtype=complex)
 
-#setting up the multi quantumgate matrices
 
+#setting up the multi quantumgate matrices
 Gate_CNOT = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]], dtype=complex)
 Gate_CNOT01 = np.array([[1, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0], [0, 1, 0, 0]], dtype=complex)
 Gate_CIdentity = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]], dtype=complex)
@@ -30,58 +34,125 @@ Gate_CT = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, -np.exp(
 Gate_SWAP = np.array([[1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]], dtype=complex)
 
 
-#setting up the multiple Quantumgate matrices
+#|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\
+#Classes that hold the qubit states, qubits and qubit register
+#|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\
 
+
+#A class that holds the vector propery of a qubit state, has alpha and beta values
 class qubitState:
+
+    #initialization of the class
     def __init__(self, alpha=1+0j, beta=0+0j):
         self.set(alpha, beta)
 
+    #setting the qubit state
     def set(self, alpha, beta):
         self._stateVector = np.array([[alpha], [beta]], dtype=complex)
 
+    #returns alpha value
     @property
     def alpha(self):
         return self._stateVector[0]
 
+    #returns beta value
     @property
     def beta(self):
         return self._stateVector[1]
 
+    #return the state vector
     def vector(self):
         return self._stateVector.copy()
 
+    #returns the probability of that state vector
     def probabilities(self):
         return np.abs(self._stateVector) ** 2
 
+    #Used to apply gate on that stateVector
     def apply(self, gate):
         self._stateVector = gate@self._stateVector
 
+#qubit register: Has an array of all the created qubits with a related qubit state class to hold properties
 class qubitRegister:
+
+    #initializing the qubitregister
     def __init__(self):
         self.qubits = []
 
+    #funciton that appends a new qubit into the register
     def append(self, qubit):
         self.qubits.append(qubit)
 
-        
+    #a dunder function that returns the length of the qubit register
     def __len__(self):
         return len(self.qubits)
 
+    #a dunder function that returns a singular qubit from the register
     def __getitem__(self, i):
         return self.qubits[i]
 
+#Class for a singular qubit
 class qubit:
+
+    #setting up the actual register
     register = qubitRegister()
 
+    #initializing the qubit using the previous qubit state class
     def __init__(self, alpha=1+0j, beta=0+0j):
         self.state = qubitState(alpha, beta)
         qubit.register.append(self)           
 
+    #Returns the probability of the specific qubit from the probability function previoiusly
     def probabilities(self):
        return self.state.probabilities()
 
+    #used ti apply the gate to specific qubit
     def apply(self, gate):
         self.state.apply(gate)
+
+#return the kronecker product of every single qubit in the register
+def kroneckerProduct():
+    resultant=qubit.register[0].state.vector()
+    for i in range(1, len(qubit.register)):
+        resultant=np.kron(resultant, qubit.register[i].state.vector())
+    return resultant
+
+
+#|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\
+#DICTIONARIES FOR THE GATES
+#|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\
+
+
+#Holding the dictionary for multi qubit gates
+multiGates = {
+    "1": ("CNOT",  Gate_CNOT),
+    "2": ("CNOT01",   Gate_CNOT01),
+    "3": ("Controlled Identity",  Gate_CIdentity),
+    "4": ("Controlled PauliX",  Gate_CpauliX),
+    "5": ("Controlled PauliY",  Gate_CpauliY),
+    "6": ("Controlled PauliZ",  Gate_CpauliZ),
+    "7": ("Controlled Hadamard",  Gate_CHadamard),
+    "8": ("Controlled S",  Gate_CS),
+    "9": ("Controlled T",  Gate_CT),
+    "10": ("SWAP",  Gate_SWAP),
+}
+
+#Holding the dictionary for single qubit gates
+singleGates = {
+    "1": ("Identity",  Gate_identity),
+    "2": ("Pauli X",   Gate_PauliX),
+    "3": ("Pauli Y",  Gate_pauliY),
+    "4": ("Pauli Z",  Gate_pauliZ),
+    "5": ("Hadamard",  Gate_Hadamard),
+    "6": ("S",  Gate_S),
+    "7": ("T",  Gate_T),
+}
+
+
+
+#|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\
+#FUNCTIONS REGARDING THE DRAWING OF BLOCH SPHERE AND DISPLAYING ITS BLOCH VECTOR
+#|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\
 
 
 #getting the coordinates for the blochvector
@@ -103,6 +174,7 @@ def blochVector(stateParameter):
     y = np.sin(theta) * np.sin(phi)
     z = np.cos(theta)
     return x, y, z
+
 
 #drawing the bloch sphere
 def draw_bloch(ax, stateParameter, no):
@@ -148,58 +220,40 @@ def draw_bloch(ax, stateParameter, no):
 
 
 
-multiGates = {
-    "1": ("CNOT",  Gate_CNOT),
-    "2": ("CNOT01",   Gate_CNOT01),
-    "3": ("Controlled Identity",  Gate_CIdentity),
-    "4": ("Controlled PauliX",  Gate_CpauliX),
-    "5": ("Controlled PauliY",  Gate_CpauliY),
-    "6": ("Controlled PauliZ",  Gate_CpauliZ),
-    "7": ("Controlled Hadamard",  Gate_CHadamard),
-    "8": ("Controlled S",  Gate_CS),
-    "9": ("Controlled T",  Gate_CT),
-    "10": ("SWAP",  Gate_SWAP),
-}
-
-singleGates = {
-    "1": ("Identity",  Gate_identity),
-    "2": ("Pauli X",   Gate_PauliX),
-    "3": ("Pauli Y",  Gate_pauliY),
-    "4": ("Pauli Z",  Gate_pauliZ),
-    "5": ("Hadamard",  Gate_Hadamard),
-    "6": ("S",  Gate_S),
-    "7": ("T",  Gate_T),
-}
-
-def kroneckerProduct():
-    resultant=qubit.register[0].state.vector()
-    for i in range(1, len(qubit.register)):
-        resultant=np.kron(resultant, qubit.register[i].state.vector())
-    return resultant
-
-#main program
-
 #initializing and displaying bloch sphere
 plt.ion()
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(111, projection="3d")
 
 
+
+#|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\
+#MAIN PROGRAM THAT RUNS PERPETUALLY
+#|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\
+
+
 while True:
+
+    #MAIN MENU TO CHOSE THE PROCESS WE WANT TO CONDUCT
     menu = input('''
     1. Create a qubit
     2. Apply gate to singular qubit
     3. Display a qubit in a bloch sphere
-    4. Show the Total qubit system
+    4. Display the Total qubit system
     5. Perform operations on the total qubit system
     q. Quit
     Choose: ''')
     print("")
 
+    #EXIT CLAUSE FOR THE MENU
     if menu == "q":
         break
 
     match menu:
+
+        #|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\
+        #CASE 1 CREATING AND INITIALIZING A QUBIT
+        #|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\
         case "1":
             initializationChoice = input('''
             1. |0>
@@ -226,6 +280,12 @@ while True:
             print(f"  State:         {np.round(q.state.vector().flatten(), 3)}")
             print(f"  Probabilities: {np.round(q.probabilities().flatten(), 3)}")
             draw_bloch(ax, q.state.vector(), len(qubit.register))
+
+
+
+        #|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\
+        #CASE 2 FOR APPLYING GATE TO A SINGULAR QUBIT
+        #|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\        
         case "2":
             if(len(qubit.register)==0):
                 print("No qubit created")
@@ -253,6 +313,12 @@ while True:
             print(f"After {name}:")
             print(f"  State:         {np.round(target.state.vector().flatten(), 3)}")
             print(f"  Probabilities: {np.round(target.probabilities().flatten(), 3)}")
+
+
+
+        #|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\
+        #DISPLAYING A SELECTED QUBIT IN THE BLOCH SPHERE
+        #|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\
         case "3":
             if (len(qubit.register)==0):
                 print("Not enough qubits")
@@ -261,6 +327,12 @@ while True:
                 print(f"qubit no.{i+1}")
             qubitChoice = int(input("Enter which qubit: "))
             draw_bloch(ax, qubit.register[qubitChoice-1].state.vector(), qubitChoice)
+
+
+
+        #|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\
+        #DISPLAY THE TOTAL MULTI-QUBIT SYSTEM
+        #|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\
         case "4":
             if(len(qubit.register)<2):
                 print("Not enough qubits")
@@ -271,6 +343,11 @@ while True:
             for i, amp in enumerate(result):
                 label = format(i, f"0{n}b")      # 0 -> '00', 1 -> '01', ...
                 print(f"  |{label}>  amplitude {np.round(amp, 3)}   probability {np.round(abs(amp)**2, 3)}")
+
+
+        #|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\
+        #PERFORMING OPERATIONS ON THE MULTI-QUBIT SYSTEM
+        #|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\
         case "5":
             choiceOfQubit = input('''
             1. 2 Qubits
@@ -293,7 +370,7 @@ while True:
                     choice = input("Choose a gate (or q to quit): ")
                 
                     if choice == "q":
-                        break
+                        continue
                     if choice not in multiGates:
                         print("Invalid entry")
                         continue
@@ -313,6 +390,7 @@ while True:
                 case _:
                     print("Invalid")
                     continue
+        #DEFAULT CASE FOR INVALID INPUT
         case _:
             print("Invalid input")
             continue
