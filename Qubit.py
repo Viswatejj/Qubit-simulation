@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from functools import reduce
 
 #|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\
 #Initiallizing basic quantum states and matrices
@@ -19,20 +20,101 @@ Gate_pauliY = np.array([[0, -1j], [1j, 0]], dtype=complex)
 Gate_pauliZ = np.array([[1, 0], [0, -1]], dtype=complex)
 Gate_S = np.array([[1, 0], [0, 1j]], dtype=complex)
 Gate_T = np.array([[1, 0], [0, np.exp(1j * np.pi / 4)]], dtype=complex)
+Gate_Sdg = np.array([[1, 0], [0, -1j]], dtype=complex)
+Gate_Tdg = np.array([[1, 0], [0, np.exp(-1j * np.pi / 4)]], dtype=complex)
 
 
-#setting up the multi quantumgate matrices
+#setting up the 2 qubit quantumgate matrices
 Gate_CNOT = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]], dtype=complex)
 Gate_CNOT01 = np.array([[1, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0], [0, 1, 0, 0]], dtype=complex)
-Gate_CIdentity = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]], dtype=complex)
+Gate_2Identity = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]], dtype=complex)
 Gate_CpauliX = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]], dtype=complex)
 Gate_CpauliY = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, -1j], [0, 0, 1j, 0]], dtype=complex)
 Gate_CpauliZ = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, -1]], dtype=complex)
 Gate_CHadamard = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, np.sqrt(1/2), np.sqrt(1/2)], [0, 0, np.sqrt(1/2), -np.sqrt(1/2)]], dtype=complex)
 Gate_CS = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1j]], dtype=complex)
-Gate_CT = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, -np.exp(1j * np.pi / 4)]], dtype=complex)
+Gate_CT = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, np.exp(1j * np.pi / 4)]], dtype=complex)
 Gate_SWAP = np.array([[1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]], dtype=complex)
+Gate_CSdg = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, -1j]], dtype=complex)
+Gate_CTdg = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, np.exp(-1j * np.pi / 4)]], dtype=complex)
 
+h = np.sqrt(1/2)
+
+#setting up the 3 qubit quantumgate matrices
+Gate_3Identity = np.eye(8, dtype=complex)
+Gate_Toffoli = np.array([
+    [1, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 0, 0, 0, 0, 0, 0],
+    [0, 0, 1, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 1, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 1],
+    [0, 0, 0, 0, 0, 0, 1, 0]], dtype=complex)
+Gate_CCpauliY = np.array([
+    [1, 0, 0, 0, 0, 0, 0,   0],
+    [0, 1, 0, 0, 0, 0, 0,   0],
+    [0, 0, 1, 0, 0, 0, 0,   0],
+    [0, 0, 0, 1, 0, 0, 0,   0],
+    [0, 0, 0, 0, 1, 0, 0,   0],
+    [0, 0, 0, 0, 0, 1, 0,   0],
+    [0, 0, 0, 0, 0, 0, 0,  -1j],
+    [0, 0, 0, 0, 0, 0, 1j,  0]], dtype=complex) 
+Gate_CCZ = np.diag([1, 1, 1, 1, 1, 1, 1, -1]).astype(complex)
+Gate_CCHadamard = np.array([
+    [1, 0, 0, 0, 0, 0, 0,  0],
+    [0, 1, 0, 0, 0, 0, 0,  0],
+    [0, 0, 1, 0, 0, 0, 0,  0],
+    [0, 0, 0, 1, 0, 0, 0,  0],
+    [0, 0, 0, 0, 1, 0, 0,  0],
+    [0, 0, 0, 0, 0, 1, 0,  0],
+    [0, 0, 0, 0, 0, 0, h,  h],
+    [0, 0, 0, 0, 0, 0, h, -h]], dtype=complex)
+Gate_CCS = np.array([
+    [1, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 0, 0, 0, 0, 0, 0],
+    [0, 0, 1, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 1, 0, 0],
+    [0, 0, 0, 0, 0, 0, 1, 0],
+    [0, 0, 0, 0, 0, 0, 0, 1j]], dtype=complex)
+Gate_CCSdg = np.array([
+    [1, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 0, 0, 0, 0, 0, 0],
+    [0, 0, 1, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 1, 0, 0],
+    [0, 0, 0, 0, 0, 0, 1, 0],
+    [0, 0, 0, 0, 0, 0, 0, -1j]], dtype=complex)
+Gate_CCT = np.array([
+    [1, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 0, 0, 0, 0, 0, 0],
+    [0, 0, 1, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 1, 0, 0],
+    [0, 0, 0, 0, 0, 0, 1, 0],
+    [0, 0, 0, 0, 0, 0, 0, np.exp(1j * np.pi / 4)]], dtype=complex)
+Gate_CCTdg = np.array([
+    [1, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 0, 0, 0, 0, 0, 0],
+    [0, 0, 1, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 1, 0, 0],
+    [0, 0, 0, 0, 0, 0, 1, 0],
+    [0, 0, 0, 0, 0, 0, 0, np.exp(-1j * np.pi / 4)]], dtype=complex)
+Gate_CSWAP = np.array([
+    [1, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 0, 0, 0, 0, 0, 0],
+    [0, 0, 1, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 1, 0],
+    [0, 0, 0, 0, 0, 1, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 1]], dtype=complex)
 
 #|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\
 #Classes that hold the qubit states, qubits and qubit register
@@ -127,7 +209,7 @@ def kroneckerProduct():
 multiGates = {
     "1": ("CNOT",  Gate_CNOT),
     "2": ("CNOT01",   Gate_CNOT01),
-    "3": ("Controlled Identity",  Gate_CIdentity),
+    "3": ("Controlled Identity",  Gate_2Identity),
     "4": ("Controlled PauliX",  Gate_CpauliX),
     "5": ("Controlled PauliY",  Gate_CpauliY),
     "6": ("Controlled PauliZ",  Gate_CpauliZ),
@@ -135,6 +217,22 @@ multiGates = {
     "8": ("Controlled S",  Gate_CS),
     "9": ("Controlled T",  Gate_CT),
     "10": ("SWAP",  Gate_SWAP),
+    "11": ("Controlled S-dagger",  Gate_CSdg),
+    "12": ("Controlled T-dagger",  Gate_CTdg),
+}
+
+#Holding the dictionary for multi qubit gates
+threeGates = {
+    "1": ("Identity",  Gate_3Identity),
+    "2": ("Toffoli",  Gate_Toffoli),
+    "3": ("Controlled C Pauli Y",  Gate_CCpauliY),
+    "4": ("Controlled C Pauli Z",  Gate_CCZ),
+    "5": ("Controlled C Hadamard",  Gate_CCHadamard),
+    "6": ("Controlled C S",  Gate_CCS),
+    "7": ("Controlled C S dagger",  Gate_CCSdg),
+    "8": ("Controlled C T",  Gate_CCT),
+    "9": ("Controlled C T dagger",  Gate_CCTdg),
+    "10": ("Controlled SWAP",  Gate_CSWAP),
 }
 
 #Holding the dictionary for single qubit gates
@@ -146,6 +244,8 @@ singleGates = {
     "5": ("Hadamard",  Gate_Hadamard),
     "6": ("S",  Gate_S),
     "7": ("T",  Gate_T),
+    "8": ("S dagger", Gate_Sdg),
+    "9": ("T dagger", Gate_Tdg),
 }
 
 
@@ -225,6 +325,13 @@ plt.ion()
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(111, projection="3d")
 
+
+def showState(state, n, title):
+    print(f"\n{title}")
+    for i, amp in enumerate(state):
+        label = format(i, f"0{n}b")
+        a = amp.item()
+        print(f"  |{label}>  amplitude {np.round(a, 3)}   probability {abs(a)**2:.3f}")
 
 
 #|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\
@@ -352,44 +459,61 @@ while True:
             choiceOfQubit = input('''
             1. 2 Qubits
             2. 3 Qubits
-            Choose the number of qubits in the qubit system:''')
+            Choose the number of qubits in the qubit system: ''')
+
             match choiceOfQubit:
                 case "1":
-                    if len(qubit.register)!=2:
-                        print("Invalid number of qubits in the register")
-                        continue
-                    result = kroneckerProduct()
-                    n = len(qubit.register)
-                    print(f"Combined state of {n} qubits ({2**n} amplitudes):")
-                    for i, amp in enumerate(result):
-                        label = format(i, f"0{n}b")      # 0 -> '00', 1 -> '01', ...
-                        print(f"  |{label}>  amplitude {np.round(amp, 3)}   probability {np.round(abs(amp)**2, 3)}")
-                    print("\nGates:")
-                    for key, (name, _) in multiGates.items():
-                        print(f"  {key}. {name}")
-                    choice = input("Choose a gate (or q to quit): ")
-                
-                    if choice == "q":
-                        continue
-                    if choice not in multiGates:
-                        print("Invalid entry")
-                        continue
-
-                    name, gate = multiGates[choice]
-                    result=gate@result
-                    print("")
-                    print(f"After {name}:")
-                    for i, amp in enumerate(result):
-                        label = format(i, f"0{n}b")      # 0 -> '00', 1 -> '01', ...
-                        print(f"  |{label}>  amplitude {np.round(amp, 3)}   probability {np.round(abs(amp)**2, 3)}")
+                    n = 2
+                    multi = multiGates
                 case "2":
-                    if len(qubit.register)!=3:
-                        print("Invalid number of qubits in the register")
-                        continue
-                    print("in the works...")
+                    n = 3
+                    multi = threeGates
                 case _:
                     print("Invalid")
                     continue
+
+            if len(qubit.register) != n:
+                print("Invalid number of qubits in the register")
+                continue
+
+            result = kroneckerProduct()          # created once, updated by every gate below
+            showState(result, n, f"Combined state of {n} qubits ({2**n} amplitudes):")
+
+            while True:
+                gateChoice = input('''
+            1. Apply a single qubit gate to all qubits
+            2. Apply a multi qubit gate to the qubit system
+            Choose an option (or q to go back to the main menu): ''')
+
+                if gateChoice == "q":
+                    break
+
+                match gateChoice:
+                    case "1":
+                        gates = singleGates
+                    case "2":
+                        gates = multi
+                    case _:
+                        print("Invalid entry")
+                        continue
+
+                print("\nGates:")
+                for key, (name, _) in gates.items():
+                    print(f"  {key}. {name}")
+                choice = input("Choose a gate (or q to go back): ")
+
+                if choice == "q":
+                    continue
+                if choice not in gates:
+                    print("Invalid entry")
+                    continue
+
+                name, gate = gates[choice]
+                if gateChoice == "1":
+                    gate = reduce(np.kron, [gate] * n)   # same gate on every qubit
+
+                result = gate @ result
+                showState(result, n, f"After {name}:")
         #DEFAULT CASE FOR INVALID INPUT
         case _:
             print("Invalid input")
