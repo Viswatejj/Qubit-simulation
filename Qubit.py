@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from functools import reduce
+import textwrap
+
 
 #|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\
 #Initiallizing basic quantum states and matrices
@@ -210,9 +212,9 @@ multiGates = {
     "1": ("CNOT",  Gate_CNOT),
     "2": ("CNOT01",   Gate_CNOT01),
     "3": ("Controlled Identity",  Gate_2Identity),
-    "4": ("Controlled PauliX",  Gate_CpauliX),
-    "5": ("Controlled PauliY",  Gate_CpauliY),
-    "6": ("Controlled PauliZ",  Gate_CpauliZ),
+    "4": ("Controlled Pauli-X",  Gate_CpauliX),
+    "5": ("Controlled Pauli-Y",  Gate_CpauliY),
+    "6": ("Controlled Pauli-Z",  Gate_CpauliZ),
     "7": ("Controlled Hadamard",  Gate_CHadamard),
     "8": ("Controlled S",  Gate_CS),
     "9": ("Controlled T",  Gate_CT),
@@ -225,8 +227,8 @@ multiGates = {
 threeGates = {
     "1": ("Identity",  Gate_3Identity),
     "2": ("Toffoli",  Gate_Toffoli),
-    "3": ("Controlled C Pauli Y",  Gate_CCpauliY),
-    "4": ("Controlled C Pauli Z",  Gate_CCZ),
+    "3": ("Controlled C Pauli-Y",  Gate_CCpauliY),
+    "4": ("Controlled C Pauli-Z",  Gate_CCZ),
     "5": ("Controlled C Hadamard",  Gate_CCHadamard),
     "6": ("Controlled C S",  Gate_CCS),
     "7": ("Controlled C S dagger",  Gate_CCSdg),
@@ -238,9 +240,9 @@ threeGates = {
 #Holding the dictionary for single qubit gates
 singleGates = {
     "1": ("Identity",  Gate_identity),
-    "2": ("Pauli X",   Gate_PauliX),
-    "3": ("Pauli Y",  Gate_pauliY),
-    "4": ("Pauli Z",  Gate_pauliZ),
+    "2": ("Pauli-X",   Gate_PauliX),
+    "3": ("Pauli-Y",  Gate_pauliY),
+    "4": ("Pauli-Z",  Gate_pauliZ),
     "5": ("Hadamard",  Gate_Hadamard),
     "6": ("S",  Gate_S),
     "7": ("T",  Gate_T),
@@ -280,44 +282,77 @@ def blochVector(stateParameter):
 def draw_bloch(ax, stateParameter, no):
     ax.clear()
 
+    # Palette
+    BG = "#14141A"            # background (almost black)
+    MAJORELLE = "#6050DC"     # sphere surface
+    ARROW = "#8F8FFF"         # state arrow and dot (brighter so it pops on dark)
+    GRID = "#D6D6FF"          # wireframe and equator (light periwinkle)
+    LIGHT = "#E8E8FF"         # axes, labels, title
+
+    # Background
+    ax.figure.patch.set_facecolor(BG)
+    ax.set_facecolor(BG)
+
     # Sphere surface and wireframe
     u = np.linspace(0, 2 * np.pi, 40)
     v = np.linspace(0, np.pi, 20)
     xs = np.outer(np.cos(u), np.sin(v))
     ys = np.outer(np.sin(u), np.sin(v))
     zs = np.outer(np.ones_like(u), np.cos(v))
-    ax.plot_surface(xs, ys, zs, color="lightblue", alpha=0.15, linewidth=0)
-    ax.plot_wireframe(xs, ys, zs, color="gray", alpha=0.2, linewidth=0.3)
+    ax.plot_surface(xs, ys, zs, color=MAJORELLE, alpha=0.15, linewidth=0)
+    ax.plot_wireframe(xs, ys, zs, color=GRID, alpha=0.35, linewidth=0.4)
 
     # Equator
     t = np.linspace(0, 2 * np.pi, 100)
-    ax.plot(np.cos(t), np.sin(t), 0 * t, color="gray", lw=0.8)
+    ax.plot(np.cos(t), np.sin(t), 0 * t, color=GRID, lw=1.2, alpha=0.9)
 
     # Coordinate axes
-    ax.plot([-1.2, 1.2], [0, 0], [0, 0], "k-", lw=0.8)
-    ax.plot([0, 0], [-1.2, 1.2], [0, 0], "k-", lw=0.8)
-    ax.plot([0, 0], [0, 0], [-1.2, 1.2], "k-", lw=0.8)
+    ax.plot([-1.2, 1.2], [0, 0], [0, 0], color=LIGHT, lw=0.8)
+    ax.plot([0, 0], [-1.2, 1.2], [0, 0], color=LIGHT, lw=0.8)
+    ax.plot([0, 0], [0, 0], [-1.2, 1.2], color=LIGHT, lw=0.8)
 
     # Labels
-    ax.text(0, 0, 1.3, "|0>", ha="center", fontsize=12)
-    ax.text(0, 0, -1.4, "|1>", ha="center", fontsize=12)
-    ax.text(1.35, 0, 0, "+x", ha="center")
-    ax.text(0, 1.35, 0, "+y", ha="center")
+    ax.text(0, 0, 1.3, "|0>", ha="center", fontsize=12, color=LIGHT)
+    ax.text(0, 0, -1.4, "|1>", ha="center", fontsize=12, color=LIGHT)
+    ax.text(1.35, 0, 0, "+x", ha="center", color=LIGHT)
+    ax.text(0, 1.35, 0, "+y", ha="center", color=LIGHT)
 
     # The qubit's state as an arrow
     x, y, z = blochVector(stateParameter)
-    ax.quiver(0, 0, 0, x, y, z, color="red", linewidth=3, arrow_length_ratio=0.15)
-    ax.scatter([x], [y], [z], color="red", s=40)
+    ax.quiver(0, 0, 0, x, y, z, color=ARROW, linewidth=3, arrow_length_ratio=0.15)
+    ax.scatter([x], [y], [z], color=ARROW, s=40)
 
     ax.set_xlim(-1, 1)
     ax.set_ylim(-1, 1)
     ax.set_zlim(-1, 1)
     ax.set_box_aspect((1, 1, 1))
     ax.set_axis_off()
-    ax.set_title(f"Bloch vector for qubit #{no}: ({x:.2f}, {y:.2f}, {z:.2f})")
+    ax.set_title(f"Bloch vector for qubit #{no}: ({x:.2f}, {y:.2f}, {z:.2f})", color=LIGHT)
     plt.draw()
     plt.pause(0.1)
 
+def draw_message(ax, message):
+    BG = "#14141A"        # same background as draw_bloch
+    LIGHT = "#E8E8FF"     # message text
+    ACCENT = "#8F8FFF"    # title
+
+    ax.clear()
+    ax.figure.patch.set_facecolor(BG)
+    ax.set_facecolor(BG)
+    ax.set_axis_off()
+
+    # Wrap long text so it fits inside the window
+    wrapped = "\n".join(textwrap.wrap(message, width=35))
+
+    # text2D places text in axes coordinates (0 to 1), so it stays centred
+    # even though the axes is 3D
+    ax.text2D(0.5, 0.5, wrapped, transform=ax.transAxes,
+              ha="center", va="center", fontsize=13,
+              color=LIGHT, linespacing=1.6)
+    ax.set_title("Bloch sphere unavailable", color=ACCENT)
+
+    plt.draw()
+    plt.pause(0.1)
 
 
 #initializing and displaying bloch sphere
@@ -341,6 +376,8 @@ def showState(state, n, title):
 
 while True:
 
+    print("")
+    print("")
     #MAIN MENU TO CHOSE THE PROCESS WE WANT TO CONDUCT
     menu = input('''
     1. Create a qubit
@@ -408,7 +445,7 @@ while True:
             choice = input("Choose a gate (or q to quit): ")
         
             if choice == "q":
-                break
+                continue
             if choice not in singleGates:
                 print("Invalid entry")
                 continue
@@ -433,6 +470,9 @@ while True:
             for i in range(0, len(qubit.register)):
                 print(f"qubit no.{i+1}")
             qubitChoice = int(input("Enter which qubit: "))
+            if qubitChoice > len(qubit.register) and qubitChoice < 1:
+                print("Invalid")
+                continue
             draw_bloch(ax, qubit.register[qubitChoice-1].state.vector(), qubitChoice)
 
 
@@ -480,6 +520,8 @@ while True:
             showState(result, n, f"Combined state of {n} qubits ({2**n} amplitudes):")
 
             while True:
+                draw_message(ax, "Bloch sphere cannot be viewed during multi qubit operations "
+                 "as it is only a representation for a single qubit. In higher qubit systems, the sphere is redundant. Please leave the current menu to go back and view singular, individual qubits on the sphere.")
                 gateChoice = input('''
             1. Apply a single qubit gate to all qubits
             2. Apply a multi qubit gate to the qubit system
